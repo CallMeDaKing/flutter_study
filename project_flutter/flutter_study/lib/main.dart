@@ -9,16 +9,21 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return new MaterialApp(
       title: 'Welcome to Flutter',
-      home: new Scaffold(
-        appBar: new AppBar(
-          title: new Text('Welcome to Flutter'),
-        ),
-        body: new Center(
-          // child: new Text('Hello World'),
-          // child: new Text(wordPair.asPascalCase),
-          child: new RandomWords(),
-        ),
+      // home: new Scaffold(
+      //   appBar: new AppBar(
+      //     title: new Text('Welcome to Flutter'),
+      //   ),
+      //   body: new Center(
+      //     // child: new Text('Hello World'),
+      //     // child: new Text(wordPair.asPascalCase),
+      //     child: new RandomWords(),
+      //   ),
+      // ),
+      // 主题
+      theme: new ThemeData(
+        primaryColor: Colors.cyan,
       ),
+      home: new RandomWords(),
     );
   }
 }
@@ -46,6 +51,9 @@ class RandomWordsState extends State<RandomWords> {
     return new Scaffold(
       appBar: new AppBar(
         title: new Text('Startup Name Generator'),
+        actions: <Widget>[
+          new IconButton(icon: new Icon(Icons.list), onPressed: _pushSaved),
+        ],
       ),
       body: _buildSuggestiongs(),
     );
@@ -55,6 +63,7 @@ class RandomWordsState extends State<RandomWords> {
 // 1、_ 开头为dart 语法私有变量  创建一个数组和 字体属性
   final _suggestions = <WordPair>[];
   final _biggerFont = const TextStyle(fontSize: 18.0);
+  final _saved = new Set<WordPair>();
 
   // 2、添加 _buildSuggestions() 函数 用于构建显示单词的listView
   Widget _buildSuggestiongs() {
@@ -72,10 +81,54 @@ class RandomWordsState extends State<RandomWords> {
   }
 
   Widget _buildRow(WordPair pair) {
+    final aleradySaved = _saved.contains(pair);
+
     return new ListTile(
       title: new Text(
         pair.asPascalCase,
         style: _biggerFont,
+      ),
+      trailing: new Icon(
+        aleradySaved ? Icons.favorite : Icons.favorite_border,
+        color: aleradySaved ? Colors.red : null,
+      ),
+      onTap: () {
+        setState(() {
+          if (aleradySaved) {
+            _saved.remove(pair);
+          } else {
+            _saved.add(pair);
+          }
+        });
+      },
+    );
+  }
+
+  void _pushSaved() {
+    Navigator.of(context).push(
+      new MaterialPageRoute(
+        builder: (context) {
+          final titles = _saved.map(
+             (pair){
+               return new ListTile(
+                 title: new Text(
+                   pair.asPascalCase,
+                   style: _biggerFont,
+                 ),
+               );
+             }
+          );
+          final divided = ListTile.divideTiles(  //divider() 方法默认在每个ListTile 之间添加一个分割线
+            context: context,
+            tiles: titles,
+          ).toList();
+          return new Scaffold(
+            appBar: new AppBar(
+              title: new Text('Saved Suggestions'),
+            ),
+            body: new ListView(children:divided),
+          );
+        },
       ),
     );
   }
